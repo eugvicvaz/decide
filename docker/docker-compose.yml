@@ -8,7 +8,9 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
     networks:
-      - decide
+      - decide  
+    environment:
+      - POSTGRES_PASSWORD=postgres
   web:
     restart: always
     container_name: decide_web
