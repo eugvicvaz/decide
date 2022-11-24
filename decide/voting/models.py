@@ -27,6 +27,31 @@ class QuestionOption(models.Model):
     def __str__(self):
         return '{} ({})'.format(self.option, self.number)
 
+class BinaryQuestions(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.TextField()
+    desc = models.TextField()
+
+    def str(self):
+        return self.name
+
+    def n_trues(self):
+        return BinaryAnswers.objects.filter(answer=1,binaryQuestions_id = self.id).count()
+
+    def n_falses(self):
+        return BinaryAnswers.objects.filter(answer=0,binaryQuestions_id = self.id).count()
+
+    def addBinaryAnswers(self,binaryAnswers):
+        binaryAnswers.binaryQuestions = self
+        binaryAnswers.save()
+
+class BinaryAnswers(models.Model):
+    id = models.AutoField(primary_key=True)
+    binaryQuestions = models.ForeignKey(BinaryQuestions,on_delete = models.CASCADE)
+    answer = models.BooleanField(choices =[(1,('Si')),(0,('No'))])
+
+    def Question_Name(self):
+        return self.binaryQuestions.name
 
 class Voting(models.Model):
     name = models.CharField(max_length=200)
