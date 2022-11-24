@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.utils import timezone
 
-from .models import *
+from .models import QuestionOption
+from .models import Question
+from .models import Voting
 
 from .filters import StartedFilter
 
@@ -43,18 +45,6 @@ class VotingAdmin(admin.ModelAdmin):
 
     actions = [ start, stop, tally ]
 
-class BinaryAnswersInLine(admin.TabularInline):
-    model = BinaryAnswers
-    extra = 2
-
-class BinaryQuestionsAdmin(admin.ModelAdmin):
-    list_display = ('id','name','desc','n_trues','n_falses')
-    inlines = [BinaryAnswersInLine]
-
-class BinaryAnswersAdmin(admin.ModelAdmin):
-    list_display = ('id','answer','Question_Name')
 
 admin.site.register(Voting, VotingAdmin)
 admin.site.register(Question, QuestionAdmin)
-admin.site.register(BinaryQuestions, BinaryQuestionsAdmin)
-admin.site.register(BinaryAnswers, BinaryAnswersAdmin)
