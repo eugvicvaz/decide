@@ -6,7 +6,98 @@ from django.dispatch import receiver
 from base import mods
 from base.models import Auth, Key
 
+#Votacion por preferencia
+class PreferenceVoting(models.Model):
+    name = models.CharField(max_length=200)
+    desc = models.TextField(blank=True, null=True)
+    id = models.AutoField(primary_key=True)
 
+    def __str__(self):
+        return self.name
+
+    #Metodo que cuenta el numero de preguntas que contiene la votacion
+    def getNumberQuestions(self):
+        return PreferenceQuestion.objects.filter(preferenceVoting_id=self.id).count()
+
+    #Metodo que añade preguntas por preferencia
+    def addPreferenceQuestion(self, preferenceQuestion):
+        preferenceQuestion.preferenceVoting = self
+        preferenceQuestion.save()
+
+class PreferenceQuestion(models.Model):
+    id = models.AutoField(primary_key=True)
+    preferenceVoting = models.ForeignKey(PreferenceVoting, on_delete=models.CASCADE)
+    question = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.question
+
+    def getVotingName(self):
+        return self.preferenceVoting.name
+
+    #Metodo que devuelve el numero de opciones de la pregunta
+    def getNumberOptions(self):
+        return ResponseOption.objects.filter(preferenceQuestion_id = self.id).count()
+    
+    #Metodo que añade una opcion a la pregunta
+    def addResponseOption(self, responseOption):
+        responseOption.preferenceVoting = self
+        responseOption.save()
+
+class ResponseOption(models.Model):
+    id = models.AutoField(primary_key=True)
+    preferenceQuestion = models.ForeignKey(PreferenceQuestion, on_delete=models.CASCADE)
+    option = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.option
+
+    def getQuestion(self):
+        return self.preferenceQuestion.question
+
+    #Metodo que añade respuesta a las preguntas
+    def addResponse(self, preferenceResponse):
+        preferenceResponse.responseOption = self
+        preferenceResponse.save()
+
+    #Metodo que devuelve la media de votos
+    def preferenceAverage(self):
+        responses = PreferenceResponse.objects.filter(responseOption_id=self.id).values('sortedPreference')
+        numResponses = len(responses)
+        if numResponses == 0:
+            numResponses == 1
+        total = 0
+        for value in responses:
+            total = total + value['sortedPreference']
+        
+        return total / numResponses
+
+    def responseOption(self):
+        responses = PreferenceResponse.objects.filter(responseOption_id=self.id).values('sortedPreference')
+        res = {}
+
+        for value in responses:
+            if value['sortedPreference'] in res:
+                result[value['sortedPreference']] = result[value['sortedPreference']] + 1
+            else:
+                result[value['sortedPreference']] = 1
+        for key in res:
+            res[key] = str(res[key]) + " veces"
+        
+        print(res)
+        return sorted(res.items())
+
+
+class PreferenceResponse(models.Model):
+    id = models.AutoField(primary_key=True)
+    responseOption = models.ForeignKey(ResponseOption, on_delete = models.CASCADE)
+    sortedPreference = models.PositiveIntegerField(blank=True, null=True)
+
+    def getName(self):
+        return self.responseOption.option
+
+
+#Votacion original de Decide
 class Question(models.Model):
     desc = models.TextField()
 
